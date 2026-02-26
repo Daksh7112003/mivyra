@@ -1,29 +1,39 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { loginSchema } from '@/lib/validators';
-import { comparePassword, hashPassword, signToken } from '@/lib/auth';
+import { comparePassword, signToken } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import User from '@/models/User';
 
-const users = [
-  { id: 'u1', name: 'Demo User', email: 'user@mivyra.com', password: '', role: 'user' as const },
-  { id: 'a1', name: 'Admin', email: 'admin@mivyra.com', password: '', role: 'admin' as const }
-];
-
-async function init() {
-  if (!users[0].password) {
-    users[0].password = await hashPassword('user@123');
-    users[1].password = await hashPassword('admin@123');
-  }
-}
-
-export async function POST(request: Request) {
-  await init();
+export async function POST(request: NextRequest) {
   const body = await request.json();
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json(parsed.error.flatten(), { status: 400 });
 
-  const user = users.find((u) => u.email === parsed.data.email);
+  await connectDB();
+  const user = await User.findOne({ email: parsed.data.email.toLowerCase() });
+
   if (!user || !(await comparePassword(parsed.data.password, user.password))) {
     return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
   }
-  const token = signToken({ userId: user.id, role: user.role });
-  return NextResponse.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+
+  const token = signToken({ userId: user._id.toString(), role: user.role });
+  const response = NextResponse.json({
+    token,
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  });
+
+  response.cookies.set('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/'
+  });
+
+  return response;
 }

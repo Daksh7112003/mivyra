@@ -5,7 +5,8 @@ A complete full-stack e-commerce application built with **Next.js + Tailwind + A
 ## Features
 - Premium, responsive storefront pages: Home, Shop, Product, Cart, Checkout, Auth, Orders, About, Contact, Policies, Admin.
 - REST APIs with pagination, auth, order creation, coupon endpoints, and admin analytics.
-- JWT auth utilities, role-based model support, zod validation, secure password hashing.
+- JWT auth with secure cookie sessions, zod validation, and bcrypt password hashing.
+- Role-based access control (RBAC) with database-backed admin checks for frontend and backend.
 - MongoDB schema models: User, Product, Category, Order, Review, Coupon, Admin.
 - Dummy catalog data and seed script.
 
@@ -34,8 +35,17 @@ A complete full-stack e-commerce application built with **Next.js + Tailwind + A
    npm run seed
    ```
 
-## Sample Credentials
-- Admin: `admin@mivyra.com` / `admin@123`
+## Auth & Role Rules
+- Signup/Login pages:
+  - `/auth/signup`
+  - `/auth/login`
+- User dashboard: `/dashboard`
+- Admin dashboard: `/admin`
+- Admin access is always verified from the `User.role` value in MongoDB, never hardcoded in route logic.
+- Non-admin users are redirected away from admin UI and blocked from admin APIs.
+
+## Seeded Credentials
+- Admin: `7daksh2003@gmail.com` / `admin@123`
 - User: `user@mivyra.com` / `user@123`
 
 ## API Documentation
@@ -45,7 +55,9 @@ Base URL: `http://localhost:3000/api`
 - `POST /auth/signup`
   - body: `{ "name": "A", "email": "a@mail.com", "password": "secret123" }`
 - `POST /auth/login`
-  - body: `{ "email": "admin@mivyra.com", "password": "admin@123" }`
+  - body: `{ "email": "7daksh2003@gmail.com", "password": "admin@123" }`
+- `GET /auth/me` (requires auth cookie)
+- `POST /auth/logout`
 
 ### Products
 - `GET /products?page=1&limit=10`
@@ -59,7 +71,7 @@ Base URL: `http://localhost:3000/api`
 ### Coupons
 - `GET /coupons`
 
-### Admin
+### Admin (admin-only)
 - `GET /admin/stats`
 - `GET /admin/products`
 - `POST /admin/products`
@@ -78,8 +90,7 @@ Base URL: `http://localhost:3000/api`
 - Optional: use Cloudinary for production image uploads
 
 ## Production hardening checklist
-- Replace in-memory auth/order stores with DB-backed repositories in API routes.
-- Add middleware for protected routes & admin JWT role checks.
+- Add CSRF tokens for authenticated write endpoints.
 - Integrate Razorpay order creation + webhook verification.
 - Add transactional email templates and event queue.
 - Add observability (Sentry, structured logging, uptime monitoring).
