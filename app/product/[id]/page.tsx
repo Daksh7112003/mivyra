@@ -1,7 +1,7 @@
 import { products } from '@/lib/data';
 
 export default function ProductDetails({ params }: { params: { id: string } }) {
-  const product = products.find((p) => p._id === params.id) || products[0];
+  const product = products.find((p) => p._id === params.id || p.slug === params.id) || products[0];
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
   return (
     <div className="container-brand py-10">
