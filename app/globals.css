@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-offwhite text-charcoal;
+}
+
+.btn-primary {
+  @apply rounded-full bg-rosegold px-5 py-2 text-offwhite transition hover:opacity-90;
+}
+
+.container-brand {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
