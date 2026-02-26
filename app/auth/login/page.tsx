@@ -1,7 +1,6 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 async function readApiError(response: Response) {
@@ -16,7 +15,6 @@ async function readApiError(response: Response) {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -39,9 +37,15 @@ export default function LoginPage() {
         return;
       }
 
-      const data = await response.json();
-      if (data.user.role === 'admin') router.push('/admin');
-      else router.push('/dashboard');
+      let nextPath = '/dashboard';
+      try {
+        const data = await response.json();
+        if (data?.user?.role === 'admin') nextPath = '/admin';
+      } catch {
+        nextPath = '/dashboard';
+      }
+
+      window.location.assign(nextPath);
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
