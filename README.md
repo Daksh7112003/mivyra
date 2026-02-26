@@ -94,3 +94,9 @@ Base URL: `http://localhost:3000/api`
 - Integrate Razorpay order creation + webhook verification.
 - Add transactional email templates and event queue.
 - Add observability (Sentry, structured logging, uptime monitoring).
+
+
+## Troubleshooting
+- If signup/login stays on **"Please wait..."**, it usually means the auth API crashed before returning JSON (commonly MongoDB is not running).
+- Start MongoDB locally first (`mongod`) or point `MONGODB_URI` to a running instance (Atlas/local).
+- Then restart Next.js dev server and try again.

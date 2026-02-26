@@ -4,6 +4,17 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+async function readApiError(response: Response) {
+  const fallback = 'Login failed';
+
+  try {
+    const data = await response.json();
+    return data?.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -16,22 +27,26 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await response.json();
-    setLoading(false);
+      if (!response.ok) {
+        setError(await readApiError(response));
+        return;
+      }
 
-    if (!response.ok) {
-      setError(data.message || 'Login failed');
-      return;
+      const data = await response.json();
+      if (data.user.role === 'admin') router.push('/admin');
+      else router.push('/dashboard');
+    } catch {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
-
-    if (data.user.role === 'admin') router.push('/admin');
-    else router.push('/dashboard');
   }
 
   return (

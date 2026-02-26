@@ -4,6 +4,17 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+async function readApiError(response: Response) {
+  const fallback = 'Signup failed';
+
+  try {
+    const data = await response.json();
+    return data?.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -17,21 +28,24 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
 
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
-    });
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
 
-    const data = await response.json();
-    setLoading(false);
+      if (!response.ok) {
+        setError(await readApiError(response));
+        return;
+      }
 
-    if (!response.ok) {
-      setError(data.message || 'Signup failed');
-      return;
+      router.push('/dashboard');
+    } catch {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
-
-    router.push('/dashboard');
   }
 
   return (
